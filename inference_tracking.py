@@ -7,12 +7,12 @@ from models.siamhan import SiamHAN
 import tensorflow as tf
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 gpu_options = tf.GPUOptions(allow_growth=True)
 sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
-checkpt_file = 'pre_trained/siamhan.ckpt'
-checkpt_meta_file = 'pre_trained/siamhan.ckpt.meta'
+checkpt_file = 'pre_trained/siamhan-pretrain.ckpt'
+checkpt_meta_file = 'pre_trained/siamhan-pretrain.ckpt.meta'
 
 attn_hid_units = [256, 256]  # numbers of hidden units per each attention head in each layer
 dense_hid_units = [768, 96]
@@ -27,7 +27,6 @@ if __name__ == '__main__':
     data_loader.build_data()
     scs_adj, fcf_adj, fsf_adj, feature, user_id_label, mask = \
         data_loader.scs_adj, data_loader.fcf_adj, data_loader.fsf_adj, data_loader.feature, data_loader.user_id_label, data_loader.mask
-    print(scs_adj.shape, fcf_adj.shape, fsf_adj.shape, feature.shape, user_id_label.shape)
 
     scs_biases = data_loader.adj_to_bias(scs_adj, [scs_adj.shape[1]] * scs_adj.shape[0], nhood=1)
     fcf_biases = data_loader.adj_to_bias(fcf_adj, [fcf_adj.shape[1]] * fcf_adj.shape[0], nhood=1)
@@ -35,6 +34,7 @@ if __name__ == '__main__':
     address = feature[:, 0, :32]
     feature = np.array([data_loader.preprocess_features(feature_graph) for feature_graph in feature])
 
+    # Rebuild labels
     history_label = 0
     addr_list = []
     addro_list = []
@@ -48,7 +48,6 @@ if __name__ == '__main__':
             if len(set(addr_list)) > 1:
                 del_label.append(history_label)
                 del_index.extend(index_list)
-                print(addro_list)
             else:
                 label_list = []
                 for _ in range(len(addr_list)):
@@ -63,7 +62,7 @@ if __name__ == '__main__':
         index_list.append(i)
         history_label = label
     new_label.append(count)
-    print(del_label)
+
     del_index = np.array(del_index)
     scs_biases = np.delete(scs_biases, del_index, axis=0)
     fcf_biases = np.delete(fcf_biases, del_index, axis=0)
@@ -80,8 +79,6 @@ if __name__ == '__main__':
         print('load model from : {}'.format(checkpt_file))
 
         graph = tf.get_default_graph()
-        [print(n.name) for n in tf.get_default_graph().as_graph_def().node]
-
         ftr_in_list = [[graph.get_operation_by_name('input/ftr_in' + i + j).outputs[0]
                         for j in ['_0', '_1', '_2']] for i in ['_1', '_2']]
         bias_in_list = [[graph.get_operation_by_name('input/bias_in' + i + j).outputs[0]
@@ -168,6 +165,6 @@ if __name__ == '__main__':
 
             score = 1 - np.array(score) / max(score)
             auc = roc_auc_score(score_label, score)
+            acc = nb_total_true / ((nb_graph - 1) * len(tracking_label))
 
-            print('auc', auc)
-            print('accuracy', nb_total_true / ((nb_graph - 1) * len(tracking_label)))
+            print('Tracking %s users: auc = %.5f, acc = %.5f' % (tracking_nb, auc, acc))

@@ -55,6 +55,10 @@ In this setting, SiamHAN could calculate the correlation between every two addre
 python inference_discovery.py
 ```
 
+## Pre-trained
+
+Since training on the anonymous dataset will cause performance degradation (especially for the user discovery task), we provide the pre-trained SiamHAN, which could achieve 99% and 87% accuracy on the task of user tracking and user discovery, respectively. To use the pre-trained model, please specify the model path as `pre_trained/siamhan-pretrain.ckpt` and `pre_trained/siamhan-pretrain.ckpt.meta`.
+
 ## Cite
 
 We hope that our work demonstrates the serious threat of IPv6 address correlation attacks and calls for effective countermeasures deployed by the IPv6 community. If the code is helpful in your work, please cite our paper:

@@ -11,9 +11,9 @@ sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 checkpt_file = 'pre_trained/siamhan.ckpt'
 
 # training params
-batch_size = 128  # 256
+batch_size = 256
 nb_epochs = 500
-patience = 100
+patience = 50  # 100
 lr = 0.005  # learning rate
 l2_coef = 0.001  # weight decay
 attn_hid_units = [256, 256]  # numbers of hidden units per each attention head in each layer

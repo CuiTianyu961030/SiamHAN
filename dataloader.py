@@ -230,19 +230,20 @@ class DataLoader(object):
                 data_pair.append((i, j))
                 if user_id_label[i] == user_id_label[j]:
                     label.append(1)
-                elif user_id_label[i] != user_id_label[j] and (feature[i][0][:12] == feature[j][0][:12]).all():
-                    label.append(2)
+                # elif user_id_label[i] != user_id_label[j] and (feature[i][0][:12] == feature[j][0][:12]).all():
+                #     label.append(2)
                 else:
                     label.append(0)
 
         label = np.array(label)
         pos_index = np.argwhere(label == 1)
-        neg_index = np.argwhere(label == 2)
+        neg_index = np.argwhere(label == 0)
+
+        nb_samples = 10000
 
         # test mode - mask this part of codes
-
         temp_index = pos_index
-        for _ in range(int(len(neg_index) / len(pos_index))-1):
+        for _ in range(int(nb_samples / len(pos_index))-1):
             temp_index = np.concatenate([temp_index, pos_index], axis=0)
         pos_index = temp_index
 
@@ -258,10 +259,10 @@ class DataLoader(object):
         assert sum(self.train_val_test_ratio) <= 1 and 0 not in self.train_val_test_ratio
 
         train_pos_nb = int(len(pos_pair) * self.train_val_test_ratio[0])
-        val_pos_nb = int(len(pos_pair)*self.train_val_test_ratio[1])
+        val_pos_nb = int(len(pos_pair) * self.train_val_test_ratio[1])
         test_pos_nb = len(pos_pair) - train_pos_nb - val_pos_nb
         train_neg_nb = int(len(neg_pair) * self.train_val_test_ratio[0])
-        val_neg_nb = int(len(neg_pair)*self.train_val_test_ratio[1])
+        val_neg_nb = int(len(neg_pair) * self.train_val_test_ratio[1])
         test_neg_nb = len(neg_pair) - train_neg_nb - val_neg_nb
 
         train_scs_adj = np.zeros((2, train_pos_nb + train_neg_nb, scs_adj.shape[1], scs_adj.shape[2]))
