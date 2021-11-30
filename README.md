@@ -19,7 +19,7 @@ Note: this code is based on [GAT](https://github.com/PetarV-/GAT) and [HAN](http
 * Python 3
 * [TensorFlow](https://www.tensorflow.org/install/) (1.0 or later)
 * [scikit-learn](http://scikit-learn.org/stable/)
-* ipaddress
+* [ipaddress](https://docs.python.org/3/library/ipaddress.html#module-ipaddress)
 
 ## Data
 
