@@ -239,7 +239,7 @@ class DataLoader(object):
         pos_index = np.argwhere(label == 1)
         neg_index = np.argwhere(label == 0)
 
-        nb_samples = 10000
+        nb_samples = 10000  # Change with a suitable number for the dataset
 
         # test mode - mask this part of codes
         temp_index = pos_index

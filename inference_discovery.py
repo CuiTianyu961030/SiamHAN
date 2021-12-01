@@ -24,8 +24,8 @@ model = SiamHAN()
 if __name__ == '__main__':
     data_loader = DataLoader()
     data_loader.build_data()
-    scs_adj, fcf_adj, fsf_adj, feature, user_id_label = \
-        data_loader.scs_adj, data_loader.fcf_adj, data_loader.fsf_adj, data_loader.feature, data_loader.user_id_label
+    scs_adj, fcf_adj, fsf_adj, feature, user_id_label, mask = \
+        data_loader.scs_adj, data_loader.fcf_adj, data_loader.fsf_adj, data_loader.feature, data_loader.user_id_label, data_loader.mask
 
     scs_biases = data_loader.adj_to_bias(scs_adj, [scs_adj.shape[1]] * scs_adj.shape[0], nhood=1)
     fcf_biases = data_loader.adj_to_bias(fcf_adj, [fcf_adj.shape[1]] * fcf_adj.shape[0], nhood=1)
@@ -68,6 +68,8 @@ if __name__ == '__main__':
     fsf_biases = np.delete(fsf_biases, del_index, axis=0)
     address = np.delete(address, del_index, axis=0)
     feature = np.delete(feature, del_index, axis=0)
+    mask = np.delete(mask, del_index, axis=0)
+    # user_id_label = np.delete(user_id_label, del_index, axis=0)
     user_id_label = np.array(new_label)
 
     saver = tf.train.import_meta_graph(checkpt_meta_file)
@@ -80,7 +82,7 @@ if __name__ == '__main__':
         ftr_in_list = [[graph.get_operation_by_name('input/ftr_in' + i + j).outputs[0]
                         for j in ['_0', '_1', '_2']] for i in ['_1', '_2']]
         bias_in_list = [[graph.get_operation_by_name('input/bias_in' + i + j).outputs[0]
-                        for j in ['_0', '_1', '_2']] for i in ['_1', '_2']]
+                         for j in ['_0', '_1', '_2']] for i in ['_1', '_2']]
         attn_drop = graph.get_operation_by_name('input/attn_drop').outputs[0]
         ffd_drop = graph.get_operation_by_name('input/ffd_drop').outputs[0]
         is_train = graph.get_operation_by_name('input/is_train').outputs[0]
@@ -117,9 +119,6 @@ if __name__ == '__main__':
         nb_total_new = 0
         history_max_pred = 0
 
-        acc = []
-        hit_nb = []
-
         for i in range(1, nb_graph):
             distance = []
             print('----- Round %s -----' % i)
@@ -135,6 +134,10 @@ if __name__ == '__main__':
                     )
                     feed_dict.update(
                         {name: np.expand_dims(data, axis=0) for name, data in zip(bias_in_list[k], biases_list[k])}
+                    )
+                    feed_dict.update(
+                        {msk_in: np.expand_dims(mask[j], axis=0) if np.sum(mask[j]) <= np.sum(mask[i])
+                        else np.expand_dims(mask[i], axis=0)}
                     )
                 if (address[i][:12] == address[j][:12]).all():
                     distance.append(sess.run('output/distance:0', feed_dict=feed_dict))
